@@ -1,0 +1,12 @@
+# Ignore node_modules folders
+**/node_modules/
+
+# Logs
+*.log
+
+# Dependency directories
+frontend/node_modules/
+backend/node_modules/
+
+# dotenv environment variables
+*.env
