@@ -11,6 +11,7 @@ const noteSchema = new mongoose.Schema({
     }
   ],
   lastUpdated: { type: Date, default: Date.now },
+  archived: { type: Boolean, default: false },
 });
 
 module.exports = mongoose.model('Note', noteSchema);
