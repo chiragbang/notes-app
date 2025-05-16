@@ -5,6 +5,7 @@ const auth = require('../middleware/auth');
 const accessCheck = require('../middleware/accessCheck');
 const notify = require('../utils/notify');
 const router = express.Router();
+const mongoose = require('mongoose');
 
 router.use(auth);
 
@@ -56,24 +57,53 @@ router.post('/', async (req, res) => {
 });
 
 // ✅ UPDATE a note (write access required)
+// router.put('/:id', accessCheck('write'), async (req, res) => {
+//   try {
+//     const note = await Note.findByIdAndUpdate(
+//       req.params.id,
+//       { ...req.body, lastUpdated: new Date() },
+//       { new: true }
+//     );
+
+//     if (!note) return res.status(404).json({ error: 'Note not found' });
+
+//     notify(note); // Optional: Socket emit or DB logging
+//     res.json(note);
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: 'Server error' });
+//   }
+// });
 router.put('/:id', accessCheck('write'), async (req, res) => {
   try {
+    const { id } = req.params;
+
+    console.log('Incoming PUT request for note ID:', id);
+    console.log('Request body:', req.body);
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      console.log('PUT /notes/:id: Invalid note ID');
+      return res.status(400).json({ error: 'Invalid note ID' });
+    }
+
     const note = await Note.findByIdAndUpdate(
-      req.params.id,
+      id,
       { ...req.body, lastUpdated: new Date() },
-      { new: true }
+      { new: true, runValidators: true }
     );
 
-    if (!note) return res.status(404).json({ error: 'Note not found' });
+    if (!note) {
+      console.log('PUT /notes/:id: Note not found');
+      return res.status(404).json({ error: 'Note not found' });
+    }
 
-    notify(note); // Optional: Socket emit or DB logging
-    res.json(note);
+    console.log('PUT /notes/:id: Updated note=', note);
+    res.status(200).json(note);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
+    console.error('PUT /notes/:id: Error=', err);
+    res.status(500).json({ error: err.message || 'Server error' });
   }
 });
-
 // ✅ DELETE a note (write access required)
 router.delete('/:id', accessCheck('write'), async (req, res) => {
   try {
